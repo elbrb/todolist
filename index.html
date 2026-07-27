@@ -1,0 +1,562 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cruscotto attività — Controlling</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#0E1217;
+    --panel:#161C24;
+    --panel2:#1B222C;
+    --line:#2A323C;
+    --hair:#222932;
+    --text:#E6EAEF;
+    --dim:#8B97A4;
+    --amber:#E8A33D;
+    --green:#4CC38A;
+    --red:#E5484D;
+    --blue:#5B9CF6;
+    --r:4px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:"Space Grotesk",system-ui,-apple-system,sans-serif;
+    font-size:14.5px;line-height:1.45;-webkit-text-size-adjust:100%;
+    background-image:linear-gradient(var(--hair) 1px,transparent 1px),linear-gradient(90deg,var(--hair) 1px,transparent 1px);
+    background-size:52px 52px;background-position:-1px -1px;
+  }
+  .wrap{max-width:1160px;margin:0 auto;padding:26px 22px 80px}
+  ::selection{background:var(--amber);color:#0E1217}
+
+  /* ---------- testata ---------- */
+  header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:20px;justify-content:space-between;
+    padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--amber);margin:0 0 7px}
+  h1{font-weight:700;font-size:clamp(24px,4vw,34px);letter-spacing:-.03em;margin:0;line-height:1}
+  .meters{display:flex;flex-wrap:wrap;border:1px solid var(--line);background:var(--panel)}
+  .meter{padding:9px 17px;border-right:1px solid var(--line);min-width:94px}
+  .meter:last-child{border-right:0}
+  .meter b{display:block;font-family:"JetBrains Mono",monospace;font-size:21px;font-weight:500;
+    line-height:1.15;font-variant-numeric:tabular-nums}
+  .meter span{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--dim)}
+  .meter.alert b{color:var(--red)}
+  .meter.wip b{color:var(--amber)}
+  .meter.ok b{color:var(--green)}
+
+  /* ---------- tab ---------- */
+  .tabs{display:flex;flex-wrap:wrap;gap:0;margin:0 0 22px}
+  .tab{
+    border:1px solid var(--line);border-top:2px solid transparent;border-left:0;
+    background:var(--panel);cursor:pointer;
+    font:500 12px/1 "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--dim);padding:12px 16px;display:inline-flex;align-items:center;gap:9px;
+    transition:color .15s,background .15s
+  }
+  .tab:first-child{border-left:1px solid var(--line)}
+  .tab:hover{color:var(--text);background:var(--panel2)}
+  .tab[aria-selected="true"]{background:var(--bg);color:var(--tacc,var(--text));
+    border-top-color:var(--tacc,var(--text));border-bottom-color:var(--bg)}
+  .tab .n{font-size:10px;letter-spacing:0;color:var(--dim);background:var(--panel2);
+    padding:2px 6px;font-variant-numeric:tabular-nums}
+  .tab[aria-selected="true"] .n{color:var(--tacc);background:transparent;border:1px solid var(--line)}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
+
+  .toolbar{display:flex;align-items:center;gap:16px;margin:0 0 16px;flex-wrap:wrap}
+  .switch{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;
+    font-size:11px;letter-spacing:.06em;color:var(--dim);cursor:pointer}
+  .switch input{accent-color:var(--amber);width:15px;height:15px}
+  .saved{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--green);opacity:0;transition:opacity .3s}
+  .saved.on{opacity:1}
+
+  /* ---------- sezione ---------- */
+  section{margin-bottom:30px}
+  .sec-head{display:flex;align-items:center;gap:14px;padding:0 0 9px}
+  .sec-head h2{font-weight:700;font-size:17px;letter-spacing:-.01em;margin:0;color:var(--acc);
+    display:flex;align-items:center;gap:9px}
+  .sec-head h2::before{content:"";width:9px;height:9px;background:var(--acc);transform:rotate(45deg)}
+  .tally{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.08em;
+    color:var(--dim);margin-right:auto;font-variant-numeric:tabular-nums}
+  .btn{border:1px solid var(--line);background:var(--panel);color:var(--text);
+    font:500 11px/1 "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;
+    padding:9px 13px;border-radius:var(--r);cursor:pointer;transition:border-color .15s,color .15s}
+  .btn:hover{border-color:var(--acc,var(--amber));color:var(--acc,var(--amber))}
+  .btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+  .cols{display:grid;grid-template-columns:minmax(0,2.3fr) 124px 92px minmax(0,1fr) 146px 30px 30px;
+    gap:10px;padding:9px 14px;font-family:"JetBrains Mono",monospace;font-size:9px;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--dim);
+    background:var(--panel2);border:1px solid var(--line)}
+  .row{display:grid;grid-template-columns:minmax(0,2.3fr) 124px 92px minmax(0,1fr) 146px 30px 30px;
+    gap:10px;align-items:center;background:var(--panel);
+    border:1px solid var(--line);border-top:0;border-left:2px solid var(--acc);padding:6px 12px}
+  .row:hover{background:var(--panel2)}
+  .row.done{opacity:.45}
+  .row.done .f-desc input{text-decoration:line-through}
+
+  input[type=text],input[type=date],select,textarea{
+    width:100%;border:1px solid transparent;background:transparent;border-radius:var(--r);
+    padding:6px 7px;font:inherit;color:var(--text);min-width:0}
+  input[type=text]::placeholder,textarea::placeholder{color:#5C6773}
+  input:hover,select:hover{border-color:var(--line)}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--amber);background:#111721}
+  input[type=date]{font-family:"JetBrains Mono",monospace;font-size:12px;font-variant-numeric:tabular-nums;color:var(--dim)}
+  .row.late input[type=date]{color:var(--red);font-weight:500}
+  ::-webkit-calendar-picker-indicator{filter:invert(.65)}
+
+  select{appearance:none;cursor:pointer;font-family:"JetBrains Mono",monospace;font-size:11px;
+    letter-spacing:.08em;text-transform:uppercase;
+    background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+    background-position:calc(100% - 13px) 50%,calc(100% - 8px) 50%;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:22px}
+  select option{background:var(--panel);color:var(--text)}
+  select[data-v="wip"]{color:var(--amber)}
+  select[data-v="done"]{color:var(--green)}
+  select[data-v="todo"]{color:var(--dim)}
+
+  .stars{display:flex;gap:1px}
+  .stars button{border:0;background:none;padding:2px;cursor:pointer;line-height:0;color:#39424E;
+    transition:color .12s}
+  .stars button.lit{color:var(--amber)}
+  .stars button:hover{color:#F5C978}
+  .stars button:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+  .stars svg{width:15px;height:15px;display:block}
+
+  .icon{border:1px solid transparent;background:none;cursor:pointer;font-size:13px;line-height:1;
+    padding:4px 5px;border-radius:var(--r);color:var(--dim);position:relative}
+  .icon:hover{border-color:var(--line);color:var(--text)}
+  .icon.kill:hover{color:var(--red)}
+  .icon.has::after{content:"";position:absolute;top:2px;right:2px;width:5px;height:5px;
+    border-radius:50%;background:var(--amber)}
+  .icon[aria-expanded="true"]{border-color:var(--line);background:var(--panel2)}
+
+  .nota{grid-column:1 / -1;padding:2px 2px 8px}
+  .nota textarea{font-size:12px;line-height:1.55;color:var(--dim);border-color:var(--line);
+    background:#111721;resize:vertical;min-height:56px;font-family:"Space Grotesk",sans-serif}
+  .nota .lbl{font-family:"JetBrains Mono",monospace;font-size:8.5px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--dim);display:block;margin:0 0 3px 2px}
+
+  .empty{border:1px solid var(--line);border-top:0;padding:16px 14px;color:var(--dim);
+    font-size:13px;background:var(--panel)}
+
+  /* ---------- riepilogo ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin-bottom:30px}
+  .card{background:var(--panel);border:1px solid var(--line);border-top:2px solid var(--acc);
+    border-radius:0;padding:15px 16px 13px;text-align:left;cursor:pointer;font:inherit;color:var(--text);
+    transition:background .15s}
+  .card:hover{background:var(--panel2)}
+  .card h3{font-family:"JetBrains Mono",monospace;font-weight:500;font-size:10.5px;letter-spacing:.18em;
+    text-transform:uppercase;margin:0 0 10px;color:var(--acc)}
+  .card .big{font-family:"JetBrains Mono",monospace;font-size:32px;line-height:1;font-weight:500;
+    font-variant-numeric:tabular-nums}
+  .card .big em{font-style:normal;font-size:9px;color:var(--dim);letter-spacing:.16em;
+    text-transform:uppercase;margin-left:8px}
+  .card .split{display:flex;gap:13px;margin-top:11px;padding-top:9px;border-top:1px solid var(--hair);
+    font-size:10.5px;color:var(--dim);font-family:"JetBrains Mono",monospace}
+  .card .split .bad{color:var(--red)}
+
+  .lead{font-family:"JetBrains Mono",monospace;font-weight:500;font-size:11px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--text);margin:0 0 3px;
+    display:flex;align-items:center;gap:10px}
+  .lead .st{color:var(--amber);letter-spacing:0}
+  .sub{font-size:12px;color:var(--dim);margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+
+  .top{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line)}
+  .top-row{display:grid;grid-template-columns:88px minmax(0,1fr) 108px minmax(0,140px) 104px;
+    gap:12px;align-items:center;background:var(--panel);padding:11px 13px;cursor:pointer;
+    transition:background .15s;border-left:2px solid var(--acc)}
+  .top-row:hover{background:var(--panel2)}
+  .top-row .tag{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--acc)}
+  .top-row .d{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .top-row .d .flag{color:var(--amber);margin-left:7px;font-size:11px}
+  .top-row .dt{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--dim);
+    font-variant-numeric:tabular-nums}
+  .top-row .dt.bad{color:var(--red)}
+  .top-row .cw{font-size:12.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .badge{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+    border:1px solid currentColor;padding:3px 7px;justify-self:end;white-space:nowrap}
+  .badge.wip{color:var(--amber)} .badge.todo{color:var(--dim)} .badge.done{color:var(--green)}
+
+  /* ---------- backup ---------- */
+  .backup{background:var(--panel);border:1px solid var(--line);padding:16px 18px}
+  .backup .acts{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .esito{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--dim)}
+  .esito.ko{color:var(--red)}
+  .esito.ok{color:var(--green)}
+
+  @media (max-width:860px){
+    body{background-size:40px 40px}
+    .cols{display:none}
+    .row{grid-template-columns:1fr 1fr;gap:6px 10px;padding:12px;position:relative;
+      border-top:1px solid var(--line);margin-bottom:7px}
+    .f-desc{grid-column:1 / -1;font-weight:500;padding-right:62px}
+    .f-cow{grid-column:1 / -1}
+    .row > *[data-label]::before{content:attr(data-label);display:block;
+      font-family:"JetBrains Mono",monospace;font-size:8.5px;letter-spacing:.16em;
+      text-transform:uppercase;color:var(--dim);margin-bottom:2px;padding-left:2px}
+    .f-note{position:absolute;top:9px;right:38px}
+    .f-kill{position:absolute;top:9px;right:8px}
+    .empty{border-top:1px solid var(--line)}
+    .tabs .tab{flex:1 1 auto;justify-content:center;padding:11px 8px;font-size:10.5px;letter-spacing:.08em}
+    .top-row{grid-template-columns:1fr auto;gap:4px 10px}
+    .top-row .tag{order:1} .top-row .badge{order:2}
+    .top-row .d{order:3;grid-column:1 / -1;white-space:normal}
+    .top-row .dt{order:4} .top-row .cw{order:5;text-align:right}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Controlling · gestione attività</p>
+      <h1>Cruscotto attività</h1>
+    </div>
+    <div class="meters">
+      <div class="meter"><b id="m-open">0</b><span>aperte</span></div>
+      <div class="meter wip"><b id="m-wip">0</b><span>in corso</span></div>
+      <div class="meter alert"><b id="m-late">0</b><span>scadute</span></div>
+      <div class="meter ok"><b id="m-done">0</b><span>chiuse</span></div>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <div class="toolbar">
+    <label class="switch"><input type="checkbox" id="hide-done"> Nascondi le completate</label>
+    <span class="saved" id="saved">salvato</span>
+  </div>
+
+  <div id="board"></div>
+</div>
+
+<script>
+const SEZIONI = [
+  {id:'urgenti',    titolo:'Urgenti',     acc:'var(--red)',   nota:'Da chiudere subito'},
+  {id:'giornaliere',titolo:'Giornaliere', acc:'var(--green)', nota:'Routine e controlli quotidiani'},
+  {id:'mensili',    titolo:'Mensili',     acc:'var(--blue)',  nota:'Chiusura, reporting, consolidato'}
+];
+const KEY = 'attivita-lavoro';
+const STATI = [['todo','Da iniziare'],['wip','WIP'],['done','✓ Completato']];
+const ETICHETTA = {todo:'Da iniziare', wip:'WIP', done:'Completato'};
+const STELLA = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05L6.2 20.55l1.1-6.5-4.7-4.6 6.5-.95z"/></svg>';
+
+let dati = {urgenti:[],giornaliere:[],mensili:[]};
+let vista = 'riepilogo';
+const noteAperte = new Set();
+const uid = () => Math.random().toString(36).slice(2,9);
+const oggi = () => new Date().toISOString().slice(0,10);
+const sezDi = id => SEZIONI.find(s => s.id === id);
+const esc = s => (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const dataIt = d => d ? d.split('-').reverse().join('.') : '—';
+
+/* ---------- persistenza ---------- */
+function carica(){
+  try{
+    const grezzo = localStorage.getItem(KEY);
+    if(grezzo){
+      const p = JSON.parse(grezzo);
+      SEZIONI.forEach(s => { if(Array.isArray(p[s.id])) dati[s.id] = p[s.id]; });
+    }
+  }catch(e){ console.error('lettura non riuscita', e); }
+}
+let t;
+function salva(){
+  clearTimeout(t);
+  t = setTimeout(() => {
+    try{
+      localStorage.setItem(KEY, JSON.stringify(dati));
+      const s = document.getElementById('saved');
+      s.classList.add('on'); setTimeout(()=>s.classList.remove('on'),1200);
+    }catch(e){
+      console.error('salvataggio non riuscito', e);
+      const s = document.getElementById('saved');
+      s.textContent = 'salvataggio non riuscito'; s.style.color = 'var(--red)'; s.classList.add('on');
+    }
+  }, 400);
+}
+
+/* ---------- tab ---------- */
+function tabs(){
+  const box = document.getElementById('tabs');
+  const voci = [{id:'riepilogo',titolo:'Riepilogo',acc:'var(--amber)'}, ...SEZIONI];
+  box.innerHTML = voci.map(v => {
+    const n = v.id === 'riepilogo'
+      ? SEZIONI.flatMap(s => dati[s.id]).filter(a => a.stato !== 'done').length
+      : dati[v.id].filter(a => a.stato !== 'done').length;
+    return `<button class="tab" role="tab" data-tab="${v.id}" style="--tacc:${v.acc}"
+      aria-selected="${vista===v.id}">${v.titolo}<span class="n">${n}</span></button>`;
+  }).join('');
+}
+
+/* ---------- render ---------- */
+function render(){
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  document.querySelector('.toolbar').style.display = vista === 'riepilogo' ? 'none' : 'flex';
+  if(vista === 'riepilogo') riepilogo(board);
+  else board.appendChild(blocco(sezDi(vista)));
+  tabs();
+  contatori();
+}
+
+function blocco(sez){
+  const nascondi = document.getElementById('hide-done').checked;
+  const el = document.createElement('section');
+  el.style.setProperty('--acc', sez.acc);
+  el.dataset.sec = sez.id;
+  const lista = dati[sez.id];
+  const visibili = nascondi ? lista.filter(a => a.stato !== 'done') : lista;
+  const aperte = lista.filter(a => a.stato !== 'done').length;
+
+  el.innerHTML = `
+    <div class="sec-head">
+      <h2>${sez.titolo}</h2>
+      <span class="tally">${aperte} aperte / ${lista.length} totali</span>
+      <button class="btn" data-add="${sez.id}">+ Nuova attività</button>
+    </div>
+    <div class="cols">
+      <span>Attività</span><span>Scadenza</span><span>Priorità</span>
+      <span>Collega</span><span>Stato</span><span>Note</span><span></span>
+    </div>
+    <div class="body"></div>`;
+
+  const body = el.querySelector('.body');
+  if(!visibili.length) body.innerHTML = `<div class="empty">${sez.nota} — aggiungi la prima attività.</div>`;
+  else visibili.forEach(a => body.appendChild(riga(a, sez.id)));
+  return el;
+}
+
+function riga(a, sezId){
+  const r = document.createElement('div');
+  const late = a.scadenza && a.scadenza < oggi() && a.stato !== 'done';
+  const aperta = noteAperte.has(a.id);
+  r.className = 'row' + (a.stato === 'done' ? ' done' : '') + (late ? ' late' : '');
+
+  r.innerHTML = `
+    <div class="f-desc"><input type="text" placeholder="Descrizione dell'attività" value="${esc(a.desc)}" data-f="desc"></div>
+    <div data-label="Scadenza"><input type="date" value="${a.scadenza||''}" data-f="scadenza"></div>
+    <div data-label="Priorità"><div class="stars" role="group" aria-label="Priorità"></div></div>
+    <div class="f-cow" data-label="Collega"><input type="text" placeholder="—" value="${esc(a.coworker)}" data-f="coworker"></div>
+    <div data-label="Stato">
+      <select data-f="stato" data-v="${a.stato}">
+        ${STATI.map(([v,l]) => `<option value="${v}" ${a.stato===v?'selected':''}>${l}</option>`).join('')}
+      </select>
+    </div>
+    <div class="f-note"><button class="icon note${(a.nota||'').trim()?' has':''}" aria-expanded="${aperta}"
+      title="Note e criticità" aria-label="Note e criticità">💬</button></div>
+    <div class="f-kill"><button class="icon kill" title="Elimina" aria-label="Elimina attività">×</button></div>
+    <div class="nota" hidden>
+      <span class="lbl">Note / criticità</span>
+      <textarea placeholder="Criticità, dipendenze, cosa manca…" data-f="nota">${esc(a.nota)}</textarea>
+    </div>`;
+
+  const box = r.querySelector('.stars');
+  for(let i=1;i<=3;i++){
+    const b = document.createElement('button');
+    b.type = 'button'; b.innerHTML = STELLA;
+    b.className = i <= (a.prio||0) ? 'lit' : '';
+    b.setAttribute('aria-label', i + ' stelle');
+    b.onclick = () => { a.prio = (a.prio === i) ? 0 : i; salva(); render(); };
+    box.appendChild(b);
+  }
+
+  const pannello = r.querySelector('.nota');
+  const bottone = r.querySelector('.icon.note');
+  pannello.hidden = !aperta;
+  bottone.onclick = () => {
+    const ora = pannello.hidden;
+    pannello.hidden = !ora;
+    bottone.setAttribute('aria-expanded', String(ora));
+    if(ora){ noteAperte.add(a.id); pannello.querySelector('textarea').focus(); }
+    else noteAperte.delete(a.id);
+  };
+
+  r.querySelectorAll('[data-f]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      a[inp.dataset.f] = inp.value; salva();
+      if(inp.dataset.f === 'stato' || inp.dataset.f === 'scadenza') render(); else contatori();
+    });
+    if(inp.tagName === 'TEXTAREA')
+      inp.addEventListener('input', () => {
+        a.nota = inp.value; salva();
+        bottone.classList.toggle('has', !!inp.value.trim());
+      });
+    else if(inp.type === 'text')
+      inp.addEventListener('input', () => { a[inp.dataset.f] = inp.value; salva(); });
+  });
+
+  r.querySelector('.kill').onclick = () => {
+    dati[sezId] = dati[sezId].filter(x => x.id !== a.id);
+    noteAperte.delete(a.id); salva(); render();
+  };
+  return r;
+}
+
+/* ---------- riepilogo: schede + sole priorità ★★★ ---------- */
+function riepilogo(board){
+  const cards = document.createElement('div');
+  cards.className = 'cards';
+  SEZIONI.forEach(s => {
+    const l = dati[s.id];
+    const aperte = l.filter(a => a.stato !== 'done').length;
+    const wip = l.filter(a => a.stato === 'wip').length;
+    const late = l.filter(a => a.stato !== 'done' && a.scadenza && a.scadenza < oggi()).length;
+    const c = document.createElement('button');
+    c.className = 'card'; c.style.setProperty('--acc', s.acc); c.dataset.tab = s.id;
+    c.innerHTML = `<h3>${s.titolo}</h3>
+      <div class="big">${aperte}<em>aperte</em></div>
+      <div class="split"><span>${wip} in corso</span>
+      <span class="${late?'bad':''}">${late} scadute</span>
+      <span>${l.length - aperte} chiuse</span></div>`;
+    cards.appendChild(c);
+  });
+  board.appendChild(cards);
+
+  const critiche = SEZIONI.flatMap(s => dati[s.id].map(a => ({a, sez:s})))
+    .filter(x => x.a.prio === 3 && x.a.stato !== 'done')
+    .sort((x,y) => {
+      const dx = x.a.scadenza || '9999', dy = y.a.scadenza || '9999';
+      return dx < dy ? -1 : dx > dy ? 1 : 0;
+    });
+
+  const sez = document.createElement('section');
+  sez.innerHTML = `<p class="lead">Priorità massima <span class="st">★★★</span></p>
+    <p class="sub">Solo le attività aperte con tre stelle, ordinate per scadenza. Clicca una riga per aprire la scheda.</p>
+    <div class="top"></div>`;
+  const box = sez.querySelector('.top');
+
+  if(!critiche.length){
+    box.outerHTML = `<div class="empty" style="border-top:1px solid var(--line)">Nessuna attività a tre stelle al momento.</div>`;
+  } else {
+    critiche.forEach(x => {
+      const a = x.a, late = a.scadenza && a.scadenza < oggi();
+      const el = document.createElement('div');
+      el.className = 'top-row';
+      el.style.setProperty('--acc', x.sez.acc);
+      el.dataset.tab = x.sez.id;
+      el.innerHTML = `
+        <span class="tag">${x.sez.titolo}</span>
+        <span class="d">${esc(a.desc) || '<span style="color:var(--dim)">senza descrizione</span>'}${(a.nota||'').trim()?'<span class="flag" title="Ha note">●</span>':''}</span>
+        <span class="dt ${late?'bad':''}">${dataIt(a.scadenza)}</span>
+        <span class="cw">${esc(a.coworker) || '—'}</span>
+        <span class="badge ${a.stato}">${ETICHETTA[a.stato]}</span>`;
+      box.appendChild(el);
+    });
+  }
+  board.appendChild(sez);
+  board.appendChild(pannelloBackup());
+}
+
+/* ---------- backup ---------- */
+function pannelloBackup(){
+  const s = document.createElement('section');
+  s.innerHTML = `<p class="lead">Backup</p>
+    <p class="sub">L'esportazione salva tutte le attività, note comprese, in un file .json.
+      L'importazione può sostituire l'archivio oppure aggiungere le attività del file a quelle già presenti.</p>
+    <div class="backup">
+      <div class="acts">
+        <button class="btn" id="exp">Esporta backup</button>
+        <button class="btn" id="imp-rep">Importa e sostituisci</button>
+        <button class="btn" id="imp-add">Importa e aggiungi</button>
+        <span class="esito" id="esito"></span>
+      </div>
+      <input type="file" id="file" accept="application/json,.json" hidden>
+    </div>`;
+
+  const esito = (msg, cls='') => {
+    const e = document.getElementById('esito');
+    if(e){ e.textContent = msg; e.className = 'esito ' + cls; }
+  };
+
+  s.querySelector('#exp').onclick = () => {
+    const pacco = {app:'attivita-lavoro', versione:2, esportato:new Date().toISOString(),
+      dati:{urgenti:dati.urgenti, giornaliere:dati.giornaliere, mensili:dati.mensili}};
+    const url = URL.createObjectURL(new Blob([JSON.stringify(pacco,null,2)],{type:'application/json'}));
+    const a = document.createElement('a');
+    a.href = url; a.download = `attivita-backup-${oggi()}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    esito(`${SEZIONI.reduce((k,x) => k + dati[x.id].length, 0)} attività esportate`, 'ok');
+  };
+
+  let modo = 'sostituisci';
+  const file = s.querySelector('#file');
+  s.querySelector('#imp-rep').onclick = () => { modo='sostituisci'; file.value=''; file.click(); };
+  s.querySelector('#imp-add').onclick = () => { modo='aggiungi';    file.value=''; file.click(); };
+
+  file.onchange = () => {
+    const f = file.files && file.files[0];
+    if(!f) return;
+    const lettore = new FileReader();
+    lettore.onload = () => {
+      let p;
+      try{ p = JSON.parse(lettore.result); }
+      catch(e){ return esito('File non leggibile: non è un .json valido', 'ko'); }
+      const src = p && p.dati ? p.dati : p;
+      if(!src || !SEZIONI.some(x => Array.isArray(src[x.id])))
+        return esito('File non compatibile: nessuna attività trovata', 'ko');
+
+      const pulite = {}; let n = 0;
+      SEZIONI.forEach(x => {
+        pulite[x.id] = (Array.isArray(src[x.id]) ? src[x.id] : []).map(a => ({
+          id: a.id || uid(),
+          desc: String(a.desc || ''),
+          scadenza: /^\d{4}-\d{2}-\d{2}$/.test(a.scadenza || '') ? a.scadenza : '',
+          prio: [0,1,2,3].includes(a.prio) ? a.prio : 0,
+          coworker: String(a.coworker || ''),
+          stato: ['todo','wip','done'].includes(a.stato) ? a.stato : 'todo',
+          nota: String(a.nota || '')
+        }));
+        n += pulite[x.id].length;
+      });
+
+      if(modo === 'sostituisci'){
+        const attuali = SEZIONI.reduce((k,x) => k + dati[x.id].length, 0);
+        if(attuali && !confirm(`Sostituire le ${attuali} attività attuali con le ${n} del file?`))
+          return esito('Importazione annullata');
+        dati = pulite;
+      } else {
+        SEZIONI.forEach(x => {
+          const presenti = new Set(dati[x.id].map(a => a.id));
+          pulite[x.id].forEach(a => { if(presenti.has(a.id)) a.id = uid(); dati[x.id].push(a); });
+        });
+      }
+      salva(); render(); esito(`${n} attività importate`, 'ok');
+    };
+    lettore.readAsText(f);
+  };
+  return s;
+}
+
+function contatori(){
+  const tutte = SEZIONI.flatMap(s => dati[s.id]);
+  const set = (id,n) => document.getElementById(id).textContent = n;
+  set('m-open', tutte.filter(a => a.stato !== 'done').length);
+  set('m-wip',  tutte.filter(a => a.stato === 'wip').length);
+  set('m-late', tutte.filter(a => a.stato !== 'done' && a.scadenza && a.scadenza < oggi()).length);
+  set('m-done', tutte.filter(a => a.stato === 'done').length);
+}
+
+/* ---------- eventi ---------- */
+document.addEventListener('click', e => {
+  const tab = e.target.closest('[data-tab]');
+  if(tab){ vista = tab.dataset.tab; render(); window.scrollTo({top:0,behavior:'smooth'}); return; }
+  const b = e.target.closest('[data-add]');
+  if(!b) return;
+  dati[b.dataset.add].push({id:uid(),desc:'',scadenza:'',prio:0,coworker:'',stato:'todo',nota:''});
+  salva(); render();
+  const campi = document.querySelectorAll(`section[data-sec="${b.dataset.add}"] .f-desc input`);
+  if(campi.length) campi[campi.length-1].focus();
+});
+document.getElementById('hide-done').addEventListener('change', render);
+
+carica(); render();
+</script>
